@@ -1,0 +1,685 @@
+from flask import Flask, request, jsonify, Response
+import sys
+import jwt
+import requests
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+import RemoveFriend_Req_pb2
+from byte import Encrypt_ID, encrypt_api
+import binascii
+import data_pb2
+import uid_generator_pb2
+import my_pb2
+import output_pb2
+from datetime import datetime
+import json
+import time
+import urllib3
+import warnings
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+warnings.filterwarnings("ignore", category=UserWarning, message="Unverified HTTPS request")
+
+app = Flask(__name__)
+
+# ============================================================
+#  HTML PAGE — loaded from templates/index.html at runtime
+# ============================================================
+import os
+
+def load_html():
+    tmpl = os.path.join(os.path.dirname(__file__), 'templates', 'index.html')
+    with open(tmpl, 'r', encoding='utf-8') as f:
+        return f.read()
+
+# ============================================================
+#  AES Configuration
+# ============================================================
+AES_KEY = bytes([89, 103, 38, 116, 99, 37, 68, 69, 117, 104, 54, 37, 90, 99, 94, 56])
+AES_IV  = bytes([54, 111, 121, 90, 68, 114, 50, 50, 69, 51, 121, 99, 104, 106, 77, 37])
+
+def encrypt_message(data_bytes):
+    cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
+    return cipher.encrypt(pad(data_bytes, AES.block_size))
+
+def encrypt_message_hex(data_bytes):
+    cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
+    encrypted = cipher.encrypt(pad(data_bytes, AES.block_size))
+    return binascii.hexlify(encrypted).decode('utf-8')
+
+# ============================================================
+#  Region URL
+# ============================================================
+def get_base_url(server_name):
+    server_name = server_name.upper()
+    if server_name == "IND":
+        return "https://client.ind.freefiremobile.com/"
+    elif server_name in {"BR", "US", "SAC", "NA"}:
+        return "https://client.us.freefiremobile.com/"
+    else:
+        return "https://clientbp.ggpolarbear.com/"
+
+def get_server_from_token(token):
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        return decoded.get("lock_region", "IND").upper()
+    except:
+        return "IND"
+
+# ============================================================
+#  Retry Decorator
+# ============================================================
+def retry_operation(max_retries=10, delay=1):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(max_retries):
+                try:
+                    result = func(*args, **kwargs)
+                    if result and result.get('status') in ['success', 'failed']:
+                        return result
+                except Exception as e:
+                    last_exception = e
+                if attempt < max_retries - 1:
+                    time.sleep(delay)
+            if last_exception:
+                return {"status": "error", "message": f"All {max_retries} attempts failed", "error": str(last_exception)}
+            return {"status": "error", "message": f"All {max_retries} attempts failed"}
+        return wrapper
+    return decorator
+
+# ============================================================
+#  Token / Login
+# ============================================================
+def get_token_from_uid_password(uid, password):
+    try:
+        oauth_url = "https://100067.connect.garena.com/oauth/guest/token/grant"
+        payload = {
+            'uid': uid, 'password': password,
+            'response_type': "token", 'client_type': "2",
+            'client_secret': "2ee44819e9b4598845141067b281621874d0d5d7af9d8f7e00c1e54715b7d1e3",
+            'client_id': "100067"
+        }
+        headers = {
+            'User-Agent': "GarenaMSDK/4.0.19P9(SM-M526B ;Android 13;pt;BR;)",
+            'Connection': "Keep-Alive", 'Accept-Encoding': "gzip"
+        }
+        oauth_response = requests.post(oauth_url, data=payload, headers=headers, timeout=10, verify=False)
+        oauth_response.raise_for_status()
+        oauth_data = oauth_response.json()
+        if 'access_token' not in oauth_data:
+            return None, "OAuth response missing access_token"
+        access_token = oauth_data['access_token']
+        open_id = oauth_data.get('open_id', '')
+        for platform_type in range(1, 13):
+            result = try_platform_login(open_id, access_token, platform_type)
+            if result and 'token' in result:
+                return result['token'], None
+        return None, "Login failed on all platforms"
+    except requests.RequestException as e:
+        return None, f"OAuth request failed: {str(e)}"
+    except Exception as e:
+        return None, f"Unexpected error: {str(e)}"
+
+def try_platform_login(open_id, access_token, platform_type):
+    try:
+        game_data = my_pb2.GameData()
+        game_data.timestamp = "2024-12-05 18:15:32"
+        game_data.game_name = "free fire"
+        game_data.game_version = 1
+        game_data.version_code = "1.123.2"
+        game_data.os_info = "Android OS 9 / API-28 (PI/rel.cjw.20220518.114133)"
+        game_data.device_type = "Handheld"
+        game_data.network_provider = "Verizon Wireless"
+        game_data.connection_type = "WIFI"
+        game_data.screen_width = 1280
+        game_data.screen_height = 960
+        game_data.dpi = "240"
+        game_data.cpu_info = "ARMv7 VFPv3 NEON VMH | 2400 | 4"
+        game_data.total_ram = 5951
+        game_data.gpu_name = "Adreno (TM) 640"
+        game_data.gpu_version = "OpenGL ES 3.0"
+        game_data.user_id = "Google|74b585a9-0268-4ad3-8f36-ef41d2e53610"
+        game_data.ip_address = "172.190.111.97"
+        game_data.language = "en"
+        game_data.open_id = open_id
+        game_data.access_token = access_token
+        game_data.platform_type = platform_type
+        game_data.field_99 = str(platform_type)
+        game_data.field_100 = str(platform_type)
+
+        serialized_data = game_data.SerializeToString()
+        encrypted_data = encrypt_message(serialized_data)
+        hex_data = binascii.hexlify(encrypted_data).decode('utf-8')
+
+        url = "https://loginbp.ggpolarbear.com/MajorLogin"
+        headers = {
+            "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)",
+            "Connection": "Keep-Alive", "Accept-Encoding": "gzip",
+            "Content-Type": "application/octet-stream",
+            "Expect": "100-continue", "X-Unity-Version": "2018.4.11f1",
+            "X-GA": "v1 1", "ReleaseVersion": "OB53"
+        }
+        response = requests.post(url, data=bytes.fromhex(hex_data), headers=headers, timeout=10, verify=False)
+        if response.status_code == 200:
+            data_dict = None
+            try:
+                example_msg = output_pb2.Garena_420()
+                example_msg.ParseFromString(response.content)
+                data_dict = {field.name: getattr(example_msg, field.name)
+                             for field in example_msg.DESCRIPTOR.fields
+                             if field.name not in ["binary", "binary_data", "Garena420"]}
+            except Exception:
+                try:
+                    data_dict = response.json()
+                except ValueError:
+                    return None
+            if data_dict and "token" in data_dict:
+                token_value = data_dict["token"]
+                try:
+                    decoded_token = jwt.decode(token_value, options={"verify_signature": False})
+                except Exception:
+                    decoded_token = {}
+                return {
+                    "account_id": decoded_token.get("account_id"),
+                    "region": decoded_token.get("lock_region"),
+                    "status": "success",
+                    "token": token_value
+                }
+        return None
+    except Exception:
+        return None
+
+# ============================================================
+#  Player Info
+# ============================================================
+def create_info_protobuf(uid):
+    message = uid_generator_pb2.uid_generator()
+    message.saturn_ = int(uid)
+    message.garena = 1
+    return message.SerializeToString()
+
+def get_player_info(target_uid, token, server_name=None):
+    try:
+        if not server_name:
+            server_name = get_server_from_token(token)
+        protobuf_data = create_info_protobuf(target_uid)
+        encrypted_data = encrypt_message_hex(protobuf_data)
+        endpoint = get_base_url(server_name) + "GetPlayerPersonalShow"
+        headers = {
+            'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)",
+            'Connection': "Keep-Alive", 'Accept-Encoding': "gzip",
+            'Authorization': f"Bearer {token}",
+            'Content-Type': "application/x-www-form-urlencoded",
+            'Expect': "100-continue", 'X-Unity-Version': "2018.4.11f1",
+            'X-GA': "v1 1", 'ReleaseVersion': "OB53"
+        }
+        response = requests.post(endpoint, data=bytes.fromhex(encrypted_data), headers=headers, verify=False)
+        if response.status_code != 200:
+            return None
+        info = data_pb2.AccountPersonalShowInfo()
+        info.ParseFromString(response.content)
+        return info
+    except Exception as e:
+        print(f"Error getting player info: {e}")
+        return None
+
+def extract_player_info_full(info_data):
+    """Extract full player info including clothes, pet, clan, skills"""
+    if not info_data:
+        return None
+    try:
+        basic = info_data.basic_info
+        profile = info_data.profile_info if hasattr(info_data, 'profile_info') else None
+        pet = info_data.pet_info if hasattr(info_data, 'pet_info') else None
+        clan = info_data.clan_basic_info if hasattr(info_data, 'clan_basic_info') else None
+        social = info_data.social_info if hasattr(info_data, 'social_info') else None
+        credit = info_data.credit_score_info if hasattr(info_data, 'credit_score_info') else None
+
+        head_pic_val = getattr(basic, 'head_pic', None) or None
+        banner_id_val = getattr(basic, 'banner_id', None) or None
+        title_val = getattr(basic, 'title', None) or None
+
+        result = {
+            # camelCase nested (used by showProfilePage)
+            "basicInfo": {
+                "accountId": basic.account_id,
+                "nickname": basic.nickname,
+                "level": basic.level,
+                "exp": basic.exp,
+                "rank": getattr(basic, 'rank', None) or None,
+                "rankingPoints": getattr(basic, 'ranking_points', None) or None,
+                "csRank": getattr(basic, 'cs_rank', None) or None,
+                "csRankingPoints": getattr(basic, 'cs_ranking_points', None) or None,
+                "maxRank": getattr(basic, 'max_rank', None) or None,
+                "liked": basic.liked,
+                "badgeCnt": getattr(basic, 'badge_cnt', None) or None,
+                "badgeId": getattr(basic, 'badge_id', None) or None,
+                "seasonId": getattr(basic, 'season_id', None) or None,
+                "region": basic.region,
+                "headPic": head_pic_val,
+                "bannerId": banner_id_val,
+                "clanName": getattr(basic, 'clan_name', None) or None,
+                "title": title_val,
+                "releaseVersion": getattr(basic, 'release_version', None) or None,
+            },
+            # flat snake_case (used by searchPlayer result box)
+            "uid": basic.account_id,
+            "nickname": basic.nickname,
+            "level": basic.level,
+            "exp": basic.exp,
+            "rank": getattr(basic, 'rank', None) or None,
+            "ranking_points": getattr(basic, 'ranking_points', None) or None,
+            "cs_rank": getattr(basic, 'cs_rank', None) or None,
+            "max_rank": getattr(basic, 'max_rank', None) or None,
+            "likes": basic.liked,
+            "badge_cnt": getattr(basic, 'badge_cnt', None) or None,
+            "season_id": getattr(basic, 'season_id', None) or None,
+            "region": basic.region,
+            "head_pic": head_pic_val,
+            "banner_id": banner_id_val,
+            "title": title_val,
+            "release_version": getattr(basic, 'release_version', None) or None,
+            "profileInfo": {},
+            "petInfo": None,
+            "socialInfo": {},
+            "clanBasicInfo": None,
+            "creditScoreInfo": {}
+        }
+
+        # Profile (avatar, cosmetic items / clothes, skills)
+        if profile:
+            # data_pb2 uses cosmetic_items; fallback to clothes if present
+            clothes_list = []
+            if hasattr(profile, 'cosmetic_items') and profile.cosmetic_items:
+                clothes_list = list(profile.cosmetic_items)
+            elif hasattr(profile, 'clothes') and profile.clothes:
+                clothes_list = list(profile.clothes)
+
+            skills_list = []
+            if hasattr(profile, 'equipped_skills') and profile.equipped_skills:
+                skills_list = list(profile.equipped_skills)
+            elif hasattr(profile, 'equiped_skills') and profile.equiped_skills:
+                skills_list = list(profile.equiped_skills)
+
+            result["profileInfo"] = {
+                "avatarId": getattr(profile, 'avatar_id', None) or None,
+                "clothes": clothes_list,
+                "equipedSkills": skills_list,
+            }
+
+        # Pet — data_pb2 uses pet_id/pet_name, not id/name
+        if pet:
+            pet_id = getattr(pet, 'pet_id', None) or getattr(pet, 'id', None)
+            pet_name = getattr(pet, 'pet_name', None) or getattr(pet, 'name', None)
+            if pet_id:
+                result["petInfo"] = {
+                    "id": pet_id,
+                    "name": pet_name,
+                    "level": getattr(pet, 'level', None),
+                    "exp": getattr(pet, 'exp', None),
+                }
+
+        # Social — data_pb2 has no mode_prefer; gender/language are enums
+        if social:
+            gender_val = None
+            language_val = None
+            try:
+                gender_val = int(social.gender)
+            except Exception:
+                pass
+            try:
+                language_val = int(social.language)
+            except Exception:
+                pass
+            result["socialInfo"] = {
+                "gender": gender_val,
+                "language": language_val,
+                "modePrefer": getattr(social, 'mode_prefer', None),
+            }
+
+        # Clan — data_pb2 uses current_members/max_members instead of member_num/capacity
+        if clan and getattr(clan, 'clan_id', None):
+            result["clanBasicInfo"] = {
+                "clanId": clan.clan_id,
+                "clanName": getattr(clan, 'clan_name', None),
+                "clanLevel": getattr(clan, 'clan_level', None),
+                "memberNum": getattr(clan, 'current_members', None) or getattr(clan, 'member_num', None),
+                "capacity": getattr(clan, 'max_members', None) or getattr(clan, 'capacity', None),
+            }
+
+        # Credit — data_pb2 uses .score not .credit_score
+        if credit:
+            score_val = getattr(credit, 'credit_score', None) or getattr(credit, 'score', None)
+            if score_val:
+                result["creditScoreInfo"] = {"creditScore": score_val}
+
+        return result
+    except Exception as e:
+        print(f"Extract error: {e}")
+        return None
+
+def extract_player_info(info_data):
+    """Slim extract for backward compat"""
+    if not info_data:
+        return None
+    basic_info = info_data.basic_info
+    return {
+        'uid': basic_info.account_id,
+        'nickname': basic_info.nickname,
+        'level': basic_info.level,
+        'region': basic_info.region,
+        'likes': basic_info.liked,
+        'release_version': basic_info.release_version,
+        'rank': basic_info.rank if hasattr(basic_info, 'rank') else None,
+        'head_pic': basic_info.head_pic if hasattr(basic_info, 'head_pic') else None,
+        'banner_id': basic_info.banner_id if hasattr(basic_info, 'banner_id') else None,
+    }
+
+def decode_author_uid(token):
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        return decoded.get("account_id") or decoded.get("sub")
+    except:
+        return None
+
+# ============================================================
+#  Friend List (using GETFRIEND logic)
+# ============================================================
+def get_friend_list_raw(token, server_name):
+    """Get raw friend list from API"""
+    try:
+        from protobuf import my_pb2 as gf_my_pb2, output_pb2 as gf_out_pb2
+    except:
+        pass
+
+    # Use BatchRemove_pb2 style GetFriend
+    try:
+        import BatchRemove_pb2
+        base_url = get_base_url(server_name)
+        headers = {
+            "X-GA": "v1 1",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/octet-stream",
+            "ReleaseVersion": "OB53",
+            "User-Agent": "UnityPlayer/2022.3.47f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)"
+        }
+        get_req = BatchRemove_pb2.CSGetFriendListReq()
+        get_req.need_presence = True
+        enc_get = encrypt_message(get_req.SerializeToString())
+        resp = requests.post(f"{base_url}GetFriend", data=enc_get, headers=headers, verify=False, timeout=15)
+        if resp.status_code == 200:
+            res_list = BatchRemove_pb2.CSGetFriendListRes()
+            res_list.ParseFromString(resp.content)
+            friends = []
+            for f in res_list.friends:
+                friends.append({
+                    "user_id": f.account_id,
+                    "nickname": f.nickname if hasattr(f, 'nickname') and f.nickname else "Unknown"
+                })
+            return {"success": True, "friends_count": len(friends), "friends_list": friends}
+    except Exception as e:
+        print(f"GetFriend error: {e}")
+
+    # Fallback: parse raw using GETFRIEND protobuf
+    try:
+        import sys, os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'GETFRIEND', 'protobuf'))
+        from protobuf import my_pb2 as g_my, output_pb2 as g_out
+
+        game_data = g_my.GameData()
+        game_data.timestamp = "2024-12-05 18:15:32"
+        game_data.game_name = "free fire"
+        game_data.game_version = 1
+        game_data.version_code = "1.108.3"
+        game_data.os_info = "Android OS 9 / API-28"
+        game_data.device_type = "Handheld"
+        game_data.network_provider = "Verizon Wireless"
+        game_data.connection_type = "WIFI"
+        game_data.screen_width = 1280
+        game_data.screen_height = 960
+        game_data.dpi = "240"
+        game_data.cpu_info = "ARMv7 VFPv3 NEON VMH | 2400 | 4"
+        game_data.total_ram = 5951
+        game_data.gpu_name = "Adreno (TM) 640"
+        game_data.gpu_version = "OpenGL ES 3.0"
+        game_data.user_id = "Google|74b585a9-0268-4ad3-8f36-ef41d2e53610"
+        game_data.ip_address = "172.190.111.97"
+        game_data.language = "en"
+        game_data.open_id = ""
+        game_data.access_token = token
+        game_data.platform_type = 4
+        game_data.field_99 = "4"
+        game_data.field_100 = "4"
+
+        base_url = get_base_url(server_name)
+        cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
+        enc = cipher.encrypt(pad(game_data.SerializeToString(), AES.block_size))
+        headers = {
+            'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)",
+            'Connection': "Keep-Alive", 'Accept-Encoding': "gzip",
+            'Content-Type': "application/octet-stream",
+            'Expect': "100-continue", 'X-GA': "v1 1",
+            'X-Unity-Version': "2018.4.11f1", 'ReleaseVersion': "OB53"
+        }
+        r = requests.post("https://loginbp.ggpolarbear.com/MajorLogin", data=enc, headers=headers, verify=False, timeout=10)
+        if r.status_code == 200:
+            msg = g_out.Garena_420()
+            msg.ParseFromString(r.content)
+            jwt_token = None
+            for f in msg.DESCRIPTOR.fields:
+                v = getattr(msg, f.name)
+                if isinstance(v, str) and v.startswith('eyJ'):
+                    jwt_token = v
+                    break
+            if jwt_token:
+                h2 = dict(headers)
+                h2['Authorization'] = f"Bearer {jwt_token}"
+                del h2['Content-Type'], h2['Expect']
+                r2 = requests.get(f"{base_url}GetFriend", headers=h2, verify=False, timeout=15)
+                if r2.status_code == 200:
+                    return {"success": True, "friends_count": 0, "friends_list": [], "_raw": r2.content.hex()}
+    except Exception as e2:
+        print(f"Fallback error: {e2}")
+
+    return {"success": False, "error": "Could not fetch friend list"}
+
+# ============================================================
+#  Friend management
+# ============================================================
+@retry_operation(max_retries=10, delay=1)
+def remove_friend_with_retry(author_uid, target_uid, token, server_name=None):
+    try:
+        if not server_name:
+            server_name = get_server_from_token(token)
+        player_info = get_player_info(target_uid, token, server_name)
+        msg = RemoveFriend_Req_pb2.RemoveFriend()
+        msg.AuthorUid = int(author_uid)
+        msg.TargetUid = int(target_uid)
+        encrypted_bytes = encrypt_message(msg.SerializeToString())
+        url = get_base_url(server_name) + "RemoveFriend"
+        headers = {
+            'Authorization': f"Bearer {token}",
+            'User-Agent': "Dalvik/2.1.0 (Linux; Android 9)",
+            'Content-Type': "application/x-www-form-urlencoded",
+            'X-Unity-Version': "2018.4.11f1", 'X-GA': "v1 1", 'ReleaseVersion': "OB53"
+        }
+        res = requests.post(url, data=encrypted_bytes, headers=headers, verify=False)
+        player_data = extract_player_info(player_info) if player_info else None
+        if res.status_code == 200:
+            status = "success"
+        else:
+            status = "failed"
+            raise Exception(f"HTTP {res.status_code}: {res.text}")
+        return {
+            "author_uid": author_uid,
+            "nickname": player_data.get('nickname') if player_data else "Unknown",
+            "uid": target_uid,
+            "level": player_data.get('level') if player_data else 0,
+            "likes": player_data.get('likes') if player_data else 0,
+            "region": player_data.get('region') if player_data else "Unknown",
+            "release_version": player_data.get('release_version') if player_data else "Unknown",
+            "status": status,
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+    except Exception as e:
+        raise e
+
+@retry_operation(max_retries=10, delay=1)
+def send_friend_request_with_retry(author_uid, target_uid, token, server_name=None):
+    try:
+        if not server_name:
+            server_name = get_server_from_token(token)
+        player_info = get_player_info(target_uid, token, server_name)
+        encrypted_id = Encrypt_ID(target_uid)
+        payload = f"08a7c4839f1e10{encrypted_id}1801"
+        encrypted_payload = encrypt_api(payload)
+        url = get_base_url(server_name) + "RequestAddingFriend"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-Unity-Version": "2018.4.11f1", "X-GA": "v1 1",
+            "ReleaseVersion": "OB53",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Dalvik/2.1.0 (Linux; Android 9)"
+        }
+        r = requests.post(url, headers=headers, data=bytes.fromhex(encrypted_payload), verify=False)
+        player_data = extract_player_info(player_info) if player_info else None
+        if r.status_code == 200:
+            status = "success"
+        else:
+            status = "failed"
+            raise Exception(f"HTTP {r.status_code}: {r.text}")
+        return {
+            "author_uid": author_uid,
+            "nickname": player_data.get('nickname') if player_data else "Unknown",
+            "uid": target_uid,
+            "level": player_data.get('level') if player_data else 0,
+            "likes": player_data.get('likes') if player_data else 0,
+            "region": player_data.get('region') if player_data else "Unknown",
+            "release_version": player_data.get('release_version') if player_data else "Unknown",
+            "status": status,
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+    except Exception as e:
+        raise e
+
+# ============================================================
+#  Routes
+# ============================================================
+@app.route('/', methods=['GET'])
+def index():
+    return Response(load_html(), mimetype='text/html')
+
+@app.route('/friend', methods=['GET'])
+def get_friends():
+    """Get friend list using UID+password"""
+    uid = request.args.get('uid')
+    password = request.args.get('pass') or request.args.get('password')
+    server_name = request.args.get('server', 'BD')
+
+    if not uid or not password:
+        return jsonify({"success": False, "error": "Missing uid or pass"}), 400
+
+    token, error = get_token_from_uid_password(uid, password)
+    if error:
+        return jsonify({"success": False, "error": error}), 400
+
+    result = get_friend_list_raw(token, server_name)
+    return jsonify(result)
+
+@app.route('/adding_friend', methods=['GET'])
+def adding_friend_custom():
+    uid = request.args.get('uid')
+    password = request.args.get('password')
+    friend_uid = request.args.get('friend_uid')
+    server_name = request.args.get('server_name', 'IND')
+    if not uid or not password or not friend_uid:
+        return jsonify({"status": "failed", "message": "Missing uid, password, or friend_uid"}), 400
+    token, error = get_token_from_uid_password(uid, password)
+    if error:
+        return jsonify({"status": "failed", "message": error}), 400
+    author_uid = decode_author_uid(token)
+    result = send_friend_request_with_retry(author_uid, friend_uid, token, server_name)
+    return jsonify(result)
+
+@app.route('/remove_friend', methods=['GET'])
+def removing_friend_custom():
+    uid = request.args.get('uid')
+    password = request.args.get('password')
+    friend_uid = request.args.get('friend_uid')
+    server_name = request.args.get('server_name', 'IND')
+    if not uid or not password or not friend_uid:
+        return jsonify({"status": "failed", "message": "Missing uid, password, or friend_uid"}), 400
+    token, error = get_token_from_uid_password(uid, password)
+    if error:
+        return jsonify({"status": "failed", "message": error}), 400
+    author_uid = decode_author_uid(token)
+    result = remove_friend_with_retry(author_uid, friend_uid, token, server_name)
+    return jsonify(result)
+
+@app.route('/player_info', methods=['GET'])
+def player_info_custom():
+    uid = request.args.get('uid')
+    password = request.args.get('password')
+    friend_uid = request.args.get('friend_uid')
+    server_name = request.args.get('server_name', 'IND')
+    if not uid or not password or not friend_uid:
+        return jsonify({"status": "failed", "message": "Missing uid, password, or friend_uid"}), 400
+    token, error = get_token_from_uid_password(uid, password)
+    if error:
+        return jsonify({"status": "failed", "message": error}), 400
+    player_info = get_player_info(friend_uid, token, server_name)
+    if not player_info:
+        return jsonify({"status": "failed", "message": "Info not found"}), 400
+    # Return full data including clothes, pet, clan, skills
+    full_data = extract_player_info_full(player_info)
+    if full_data:
+        full_data["status"] = "success"
+        full_data["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return jsonify(full_data)
+    # fallback
+    player_data = extract_player_info(player_info)
+    player_data.update({"status": "success", "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    return jsonify(player_data)
+
+@app.route('/player_info_by_token', methods=['GET'])
+def player_info_by_token():
+    jwt_token = request.args.get('jwt_token')
+    friend_uid = request.args.get('friend_uid')
+    server_name = request.args.get('server_name', 'IND')
+    if not jwt_token or not friend_uid:
+        return jsonify({"status": "failed", "message": "Missing jwt_token or friend_uid"}), 400
+    author_uid = decode_author_uid(jwt_token)
+    if not author_uid:
+        return jsonify({"status": "failed", "message": "Invalid JWT token"}), 400
+    player_info = get_player_info(friend_uid, jwt_token, server_name)
+    if not player_info:
+        return jsonify({"status": "failed", "message": "Info not found"}), 400
+    full_data = extract_player_info_full(player_info)
+    if full_data:
+        full_data["status"] = "success"
+        return jsonify(full_data)
+    player_data = extract_player_info(player_info)
+    player_data.update({"status": "success"})
+    return jsonify(player_data)
+
+@app.route('/token', methods=['GET'])
+def oauth_guest():
+    uid = request.args.get('uid')
+    password = request.args.get('password')
+    if not uid or not password:
+        return jsonify({"message": "Missing uid or password"}), 400
+    token, error = get_token_from_uid_password(uid, password)
+    if error:
+        return jsonify({"message": error}), 400
+    author_uid = decode_author_uid(token)
+    if not author_uid:
+        return jsonify({"message": "Generated token is invalid"}), 400
+    return jsonify({"status": "success", "token": token, "uid": uid, "author_uid": author_uid})
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "service": "SAMI_CODEX-FriendManager"}), 200
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
