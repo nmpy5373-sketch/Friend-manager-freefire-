@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SAMI_CODEX ADVANCE FRIEND MANAGER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:      #0a0d1a;
+  --bg2:     #0e1225;
+  --bg3:     #121733;
+  --card:    #131929;
+  --card2:   #1a2240;
+  --border:  rgba(120,100,220,0.2);
+  --border2: rgba(120,100,220,0.35);
+  --purple:  #7c5cfc;
+  --purple2: #a07cff;
+  --purple3: #5a3dd8;
+  --teal:    #00e5c3;
+  --green:   #00d68f;
+  --red:     #ff4060;
+  --yellow:  #ffd060;
+  --text:    #e8eaf6;
+  --text2:   #9da8d4;
+  --text3:   #5d6a99;
+  --glow:    rgba(124,92,252,0.3);
+  --glow2:   rgba(0,229,195,0.2);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body {
+  font-family:'Hind Siliguri',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* bg effects */
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -5%, rgba(124,92,252,0.15) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 30% at 85% 85%, rgba(0,229,195,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 20% at 15% 75%, rgba(124,92,252,0.06) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+body::after {
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(124,92,252,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,92,252,0.025) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+.page {
+  position:relative;z-index:1;
+  max-width:600px;margin:0 auto;
+  padding:28px 16px 80px;
+}
+
+/* === HEADER === */
+header {
+  text-align:center;
+  margin-bottom:28px;
+  animation:fadeDown .5s ease both;
+}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+.header-badge {
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(124,92,252,0.12);
+  border:1px solid var(--border2);
+  padding:5px 14px 5px 10px;
+  border-radius:100px;
+  font-family:'Exo 2',sans-serif;
+  font-size:10px;font-weight:700;
+  letter-spacing:.15em;text-transform:uppercase;
+  color:var(--purple2);
+  margin-bottom:16px;
+}
+.header-badge .dot {
+  width:7px;height:7px;
+  background:var(--purple);border-radius:50%;
+  box-shadow:0 0 10px var(--purple);
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 10px var(--purple)}50%{opacity:.4;box-shadow:0 0 3px var(--purple)}}
+
+.header-title {
+  font-family:'Exo 2',sans-serif;
+  font-size:clamp(1.5rem,5vw,2.2rem);
+  font-weight:900;
+  letter-spacing:.03em;
+  color:var(--text);
+  margin-bottom:4px;
+}
+.header-title .purple{color:var(--purple2);}
+
+.header-sub {
+  font-size:12px;color:var(--text3);
+  letter-spacing:.04em;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+}
+.header-sub span{display:flex;align-items:center;gap:5px;}
+
+/* === CARD === */
+.card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:24px;
+  margin-bottom:16px;
+  animation:fadeUp .35s ease both;
+  box-shadow:0 4px 32px rgba(0,0,0,.35);
+}
+
+.card-title {
+  font-family:'Exo 2',sans-serif;
+  font-size:13px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--purple2);
+  margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title .ico{font-size:16px;}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* === FORM === */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.field label{
+  font-size:11px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text3);
+}
+.field input,.field select {
+  width:100%;
+  padding:12px 16px;
+  background:var(--bg3);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  font-family:'Hind Siliguri',sans-serif;
+  font-size:15px;color:var(--text);
+  outline:none;
+  transition:border-color .18s,box-shadow .18s;
+  -webkit-appearance:none;
+}
+.field input::placeholder{color:var(--text3);}
+.field input:focus,.field select:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 3px rgba(124,92,252,.15);
+}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239da8d4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer;
+}
+.field select option{background:var(--bg3);}
+
+/* === BUTTON === */
+.btn {
+  width:100%;padding:14px 24px;
+  border:none;border-radius:14px;
+  font-family:'Exo 2',sans-serif;
+  font-size:14px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s ease;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  position:relative;overflow:hidden;
+}
+.btn-primary {
+  background:linear-gradient(135deg, var(--purple3), var(--purple));
+  color:#fff;
+  box-shadow:0 6px 24px rgba(124,92,252,.35);
+}
+.btn-primary:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 10px 32px rgba(124,92,252,.45);
+}
+.btn-green {
+  background:linear-gradient(135deg,#00a86b,var(--green));
+  color:#fff;box-shadow:0 6px 20px rgba(0,214,143,.3);
+}
+.btn-green:hover:not(:disabled){transform:translateY(-2px);}
+.btn-red {
+  background:linear-gradient(135deg,#cc2040,var(--red));
+  color:#fff;box-shadow:0 6px 20px rgba(255,64,96,.3);
+}
+.btn-red:hover:not(:disabled){transform:translateY(-2px);}
+.btn-outline {
+  background:transparent;
+  border:1.5px solid var(--purple);
+  color:var(--purple2);
+}
+.btn-outline:hover:not(:disabled){background:rgba(124,92,252,.1);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+
+/* spinner */
+.spin{
+  width:16px;height:16px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .6s linear infinite;display:none;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading .spin{display:block;}
+.loading .btn-lbl{opacity:.7;}
+
+/* === ALERT === */
+.alert{
+  border-radius:14px;overflow:hidden;
+  margin-bottom:16px;display:none;
+  animation:fadeUp .3s ease both;
+  border:1px solid;
+}
+.alert.show{display:block;}
+.alert-head{
+  padding:12px 18px;
+  display:flex;align-items:center;gap:8px;
+  font-family:'Exo 2',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+}
+.alert-body{padding:16px 18px;background:rgba(0,0,0,.2);}
+.alert-err{border-color:rgba(255,64,96,.3);}
+.alert-err .alert-head{background:rgba(255,64,96,.12);color:var(--red);}
+.alert-ok{border-color:rgba(0,214,143,.3);}
+.alert-ok .alert-head{background:rgba(0,214,143,.12);color:var(--green);}
+
+/* === FRIEND LIST === */
+.friend-list-wrap{margin-top:8px;}
+.friend-empty{
+  background:rgba(255,64,96,.08);
+  border:1px solid rgba(255,64,96,.2);
+  border-radius:14px;padding:18px;
+  text-align:center;color:#ff7090;
+  font-size:14px;font-weight:600;
+}
+.friend-stats{
+  display:flex;gap:10px;margin-bottom:14px;
+}
+.fstat{
+  flex:1;background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:12px;padding:12px;text-align:center;
+}
+.fstat .fnum{font-family:'Exo 2',sans-serif;font-size:22px;font-weight:800;color:var(--purple2);}
+.fstat .flbl{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.friend-item {
+  background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:8px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;
+  transition:border-color .18s,background .18s;
+}
+.friend-item:hover{border-color:var(--border2);background:#1f2855;}
+.friend-avatar{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+  overflow:hidden;
+  border:1px solid var(--border);
+}
+.friend-avatar img{width:100%;height:100%;object-fit:cover;}
+.friend-info{flex:1;min-width:0;}
+.friend-name{font-family:'Exo 2',sans-serif;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.friend-uid{font-size:12px;color:var(--text3);font-family:monospace;}
+.friend-actions{display:flex;gap:6px;flex-shrink:0;}
+.icon-btn{
+  width:34px;height:34px;border:none;border-radius:9px;
+  cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;
+}
+.icon-btn-eye{background:rgba(124,92,252,.15);color:var(--purple2);}
+.icon-btn-eye:hover{background:rgba(124,92,252,.3);}
+.icon-btn-rm{background:rgba(255,64,96,.12);color:var(--red);}
+.icon-btn-rm:hover{background:rgba(255,64,96,.25);}
+
+/* === PROFILE VIEW === */
+.profile-wrap{display:none;animation:fadeUp .35s ease both;}
+.profile-wrap.show{display:block;}
+
+.profile-banner {
+  border-radius:20px;overflow:hidden;
+  position:relative;
+  height:180px;background:var(--bg3);
+  border:1px solid var(--border);
+  margin-bottom:0;
+}
+.profile-banner img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+}
+.profile-banner-placeholder{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#1a1040 0%,#0d1a3a 50%,#1a1040 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;opacity:.3;
+}
+
+.profile-avatar-wrap{
+  position:relative;
+  margin-top:-44px;
+  margin-left:20px;
+  display:inline-block;
+  z-index:2;
+}
+.profile-avatar {
+  width:80px;height:80px;
+  border-radius:50%;
+  border:3px solid var(--purple);
+  background:var(--bg3);
+  overflow:hidden;
+  box-shadow:0 0 24px rgba(124,92,252,.5);
+}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;}
+
+.profile-head {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:16px 20px 20px;
+  margin-bottom:12px;
+  margin-top:8px;
+  position:relative;
+}
+.profile-name{
+  font-family:'Exo 2',sans-serif;
+  font-size:20px;font-weight:800;
+  color:var(--text);margin-bottom:2px;
+  padding-left:0;
+}
+.profile-uid{
+  font-size:12px;color:var(--text3);
+  font-family:monospace;padding-left:0;margin-bottom:14px;
+}
+.profile-uid .uid-ico{margin-right:4px;font-size:10px;}
+
+.stats-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  margin-bottom:0;
+}
+.stat-box{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:12px;padding:10px 8px;text-align:center;
+}
+.stat-val{
+  font-family:'Exo 2',sans-serif;
+  font-size:18px;font-weight:800;
+  color:var(--purple2);
+  line-height:1;
+}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.04em;}
+
+/* profile sections */
+.info-section{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;padding:18px;
+  margin-bottom:10px;
+}
+.info-sec-title{
+  font-family:'Exo 2',sans-serif;
+  font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.info-sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.info-sec-title .ico{font-size:13px;}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.info-box{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;
+}
+.info-val{font-family:'Exo 2',sans-serif;font-size:16px;font-weight:700;color:var(--text);word-break:break-all;}
+.info-lbl{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.03em;}
+
+/* clothes grid */
+.clothes-grid{
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.cloth-item{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:10px;
+  width:80px;text-align:center;padding:6px;
+  transition:border-color .18s;
+}
+.cloth-item:hover{border-color:var(--border2);}
+.cloth-img{
+  width:60px;height:60px;
+  object-fit:contain;
+  display:block;margin:0 auto 4px;
+}
+.cloth-num{font-size:10px;color:var(--text3);line-height:1.4;}
+
+/* skills */
+.skills-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+.skill-tag{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:8px;padding:5px 10px;
+  font-size:12px;color:var(--text2);
+  display:flex;align-items:center;gap:5px;
+}
+.skill-tag .sico{font-size:10px;}
+
+/* pet */
+.pet-wrap{display:flex;align-items:center;gap:14px;}
+.pet-img-wrap{
+  width:80px;height:80px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.pet-img-wrap img{width:100%;height:100%;object-fit:contain;}
+.pet-stats{flex:1;}
+
+/* clan */
+.clan-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+
+/* credit */
+.credit-bar{
+  background:var(--bg3);border-radius:100px;height:8px;
+  overflow:hidden;margin-bottom:6px;
+}
+.credit-fill{
+  height:100%;border-radius:100px;
+  background:linear-gradient(90deg,var(--purple3),var(--teal));
+  transition:width .8s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* action buttons under profile */
+.profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+
+.back-btn{
+  background:rgba(124,92,252,.15);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  padding:10px 18px;
+  font-family:'Exo 2',sans-serif;
+  font-size:12px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  color:var(--purple2);
+  cursor:pointer;
+  transition:all .18s;
+  display:inline-flex;align-items:center;gap:6px;
+  margin-bottom:14px;
+}
+.back-btn:hover{background:rgba(124,92,252,.25);}
+
+/* add friend search result */
+.search-result-box{
+  margin-top:12px;
+  background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  display:none;animation:fadeUp .3s ease both;
+}
+.search-result-box.show{display:block;}
+.srb-banner{position:relative;height:100px;overflow:hidden;}
+.srb-banner img{width:100%;height:100%;object-fit:cover;}
+.srb-banner-ph{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#1a1040,#0d1a3a);
+  display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.3;
+}
+.srb-body{padding:14px 16px;}
+.srb-avatar{
+  width:44px;height:44px;border-radius:10px;
+  border:2px solid var(--purple);
+  background:var(--bg3);overflow:hidden;
+  margin-top:-30px;margin-bottom:8px;
+  box-shadow:0 0 16px rgba(124,92,252,.35);
+}
+.srb-avatar img{width:100%;height:100%;object-fit:cover;}
+.srb-name{font-family:'Exo 2',sans-serif;font-size:16px;font-weight:800;color:var(--text);}
+.srb-uid{font-size:12px;color:var(--text3);font-family:monospace;margin-bottom:10px;}
+.srb-meta{display:flex;gap:10px;margin-bottom:14px;}
+.srb-tag{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;padding:5px 10px;font-size:12px;color:var(--text2);
+  display:flex;align-items:center;gap:5px;
+}
+.srb-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* remove all */
+.rall-friend-list{margin-top:10px;}
+.rall-item{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;
+}
+.rall-num{
+  width:24px;height:24px;border-radius:6px;
+  background:rgba(124,92,252,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--purple2);flex-shrink:0;
+}
+.rall-name{font-size:14px;font-weight:600;color:var(--text);flex:1;}
+.rall-uid{font-size:11px;color:var(--text3);font-family:monospace;}
+
+/* tabs */
+.tabs{
+  display:flex;gap:3px;
+  background:rgba(124,92,252,.06);
+  border:1px solid var(--border);
+  border-radius:16px;padding:4px;
+  margin-bottom:16px;
+  overflow-x:auto;
+}
+.tab-btn{
+  flex:1;min-width:fit-content;
+  padding:10px 12px;border:none;border-radius:12px;
+  font-family:'Exo 2',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;
+  cursor:pointer;transition:all .22s ease;
+  background:transparent;color:var(--text3);white-space:nowrap;
+}
+.tab-btn.active{background:var(--purple3);color:#fff;box-shadow:0 4px 16px rgba(90,61,216,.35);}
+
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* footer */
+footer{
+  text-align:center;margin-top:40px;
+  font-size:12px;color:var(--text3);
+  display:flex;align-items:center;justify-content:center;gap:14px;
+}
+.footer-ico{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--card2);border:1px solid var(--border);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:border-color .18s;
+  text-decoration:none;
+}
+.footer-ico:hover{border-color:var(--border2);}
+.footer-dev{
+  display:block;margin-top:8px;
+  font-family:'Exo 2',sans-serif;font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.footer-dev span{color:var(--purple2);}
+
+/* notification toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:12px;padding:12px 20px;
+  font-size:13px;color:var(--text);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  transition:transform .3s ease,opacity .3s ease;
+  opacity:0;z-index:1000;white-space:nowrap;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-badge"><span class="dot"></span>Free Fire Tool</div>
+    <div class="header-title">🎯 <span class="purple">KAWSAR_CODEX ADVANCE</span> FRIEND MANAGER 👑</div>
+    <div class="header-sub">
+      <span>👤 UID দিয়ে এড</span>
+      <span>🗑 ক্রস দিয়ে আনফ্রেন্ড</span>
+      <span>👁 প্রোফাইলে ক্লিক করুন</span>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('load')">🚀 ফ্রেন্ড লিস্ট</button>
+    <button class="tab-btn" onclick="switchTab('add')">➕ ফ্রেন্ড এড</button>
+    <button class="tab-btn" onclick="switchTab('remove')">❌ আনফ্রেন্ড</button>
+    <button class="tab-btn" onclick="switchTab('removeall')">🗑 সব রিমুভ</button>
+  </div>
+
+  <!-- ============ PANEL: FRIEND LIST ============ -->
+  <div class="panel active" id="panel-load">
+
+    <div class="card">
+      <div class="card-title"><span class="ico">🔑</span>লগইন তথ্য</div>
+      <div class="field">
+        <label>ফ্রি ফায়ার UID</label>
+        <input type="text" id="l-uid" placeholder="আপনার UID দিন" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label>ফ্রি ফায়ার পাসওয়ার্ড</label>
+        <input type="password" id="l-pass" placeholder="আপনার পাসওয়ার্ড দিন"/>
+      </div>
+      <div class="field">
+        <label>সার্ভার রিজিয়ন</label>
+        <select id="l-server">
+          <option value="BD">🇧🇩 BD — Bangladesh</option>
+          <option value="IND">🇮🇳 IND — India</option>
+          <option value="SG">🇸🇬 SG — Singapore</option>
+          <option value="BR">🇧🇷 BR — Brazil</option>
+          <option value="US">🇺🇸 US — North America</option>
+          <option value="SAC">🌎 SAC — South America</option>
+          <option value="ID">🇮🇩 ID — Indonesia</option>
+          <option value="TW">🇹🇼 TW — Taiwan</option>
+          <option value="TH">🇹🇭 TH — Thailand</option>
+          <option value="VN">🇻🇳 VN — Vietnam</option>
+          <option value="ME">ME — Middle East</option>
+          <option value="PK">🇵🇰 PK — Pakistan</option>
+          <option value="RU">🇷🇺 RU — Russia</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="load-btn" onclick="loadFriendList()">
+        <span class="spin" id="load-spin"></span>
+        <span class="btn-lbl">🚀 ফ্রেন্ড লিস্ট লোড করুন</span>
+      </button>
+    </div>
+
+    <!-- friend list result -->
+    <div id="fl-err" class="alert alert-err">
+      <div class="alert-head">⚠️ ত্রুটি</div>
+      <div class="alert-body" id="fl-err-msg" style="font-size:14px;"></div>
+    </div>
+
+    <div id="fl-empty" class="friend-empty" style="display:none;">কান ফ্রেন্ড পাওয়া যায়নি!</div>
+
+    <div id="fl-list" class="friend-list-wrap" style="display:none;">
+      <div class="friend-stats">
+        <div class="fstat"><div class="fnum" id="fl-count">0</div><div class="flbl">মোট ফ্রেন্ড</div></div>
+        <div class="fstat"><div class="fnum" id="fl-uid-show" style="font-size:14px">—</div><div class="flbl">আপনার UID</div></div>
+      </div>
+      <div id="fl-items"></div>
+    </div>
+
+  </div>
+
+  <!-- ============ PANEL: ADD FRIEND ============ -->
+  <div class="panel" id="panel-add">
+    <div class="card">
+      <div class="card-title"><span class="ico">🔑</span>আপনার একাউন্ট</div>
+      <div class="field">
+        <label>ফ্রি ফায়ার UID</label>
+        <input type="text" id="a-uid" placeholder="আপনার UID" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label>পাসওয়ার্ড</label>
+        <input type="password" id="a-pass" placeholder="আপনার পাসওয়ার্ড"/>
+      </div>
+      <div class="field">
+        <label>সার্ভার</label>
+        <select id="a-server">
+          <option value="BD">🇧🇩 BD</option><option value="IND">🇮🇳 IND</option>
+          <option value="SG">🇸🇬 SG</option><option value="BR">🇧🇷 BR</option>
+          <option value="US">🇺🇸 US</option><option value="ID">🇮🇩 ID</option>
+          <option value="ME">ME</option><option value="PK">🇵🇰 PK</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ico">👤+</span>নতুন ফ্রেন্ড এড করুন</div>
+      <div class="field" style="flex-direction:row;gap:8px;align-items:flex-end;">
+        <div style="flex:1">
+          <label style="display:block;margin-bottom:6px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);">ফ্রেন্ডের UID দিন</label>
+          <input type="text" id="a-fuid" placeholder="ফ্রেন্ডের UID" inputmode="numeric"/>
+        </div>
+        <button class="btn btn-outline" style="width:auto;padding:12px 20px;white-space:nowrap;" id="search-btn" onclick="searchPlayer()">
+          <span class="spin" id="search-spin" style="border-color:rgba(124,92,252,.3);border-top-color:var(--purple2);"></span>
+          <span class="btn-lbl">🔍 সার্চ</span>
+        </button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">ℹ️ UID দিয়ে সার্চ করুন → প্রোফাইল দেখুন → এড করুন</div>
+
+      <!-- search result -->
+      <div class="search-result-box" id="srb">
+        <div class="srb-banner" id="srb-banner">
+          <div class="srb-banner-ph">🎮</div>
+        </div>
+        <div class="srb-body">
+          <div class="srb-avatar" id="srb-avatar"><img src="" id="srb-avatar-img" onerror="this.style.display='none'"/></div>
+          <div class="srb-name" id="srb-name">—</div>
+          <div class="srb-uid" id="srb-uid">—</div>
+          <div class="srb-meta">
+            <div class="srb-tag">⭐ লেভেল <span id="srb-level">—</span></div>
+            <div class="srb-tag">🏆 র‍্যাংক <span id="srb-rank">—</span></div>
+          </div>
+          <div class="srb-btns">
+            <button class="btn btn-outline" onclick="viewProfileFromSearch()">👁 প্রোফাইল দেখুন</button>
+            <button class="btn btn-green" id="add-btn" onclick="addFriendNow()">
+              <span class="spin" id="add-spin"></span>
+              <span class="btn-lbl">👤+ এড করুন</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-err" id="add-err"><div class="alert-head">⚠️ ত্রুটি</div><div class="alert-body" id="add-err-msg"></div></div>
+    <div class="alert alert-ok" id="add-ok"><div class="alert-head">✅ সফল</div><div class="alert-body" id="add-ok-msg"></div></div>
+  </div>
+
+  <!-- ============ PANEL: REMOVE FRIEND ============ -->
+  <div class="panel" id="panel-remove">
+    <div class="card">
+      <div class="card-title"><span class="ico">🔑</span>আপনার একাউন্ট</div>
+      <div class="field"><label>UID</label><input type="text" id="r-uid" placeholder="আপনার UID" inputmode="numeric"/></div>
+      <div class="field"><label>পাসওয়ার্ড</label><input type="password" id="r-pass" placeholder="পাসওয়ার্ড"/></div>
+      <div class="field">
+        <label>সার্ভার</label>
+        <select id="r-server">
+          <option value="BD">🇧🇩 BD</option><option value="IND">🇮🇳 IND</option>
+          <option value="SG">🇸🇬 SG</option><option value="BR">🇧🇷 BR</option>
+          <option value="ID">🇮🇩 ID</option><option value="ME">ME</option><option value="PK">🇵🇰 PK</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ico">❌</span>ফ্রেন্ড রিমুভ করুন</div>
+      <div class="field"><label>রিমুভ করতে চাওয়া UID</label><input type="text" id="r-fuid" placeholder="ফ্রেন্ডের UID" inputmode="numeric"/></div>
+      <button class="btn btn-red" id="rm-btn" onclick="removeFriend()">
+        <span class="spin" id="rm-spin"></span>
+        <span class="btn-lbl">❌ ফ্রেন্ড রিমুভ করুন</span>
+      </button>
+    </div>
+    <div class="alert alert-err" id="rm-err"><div class="alert-head">⚠️ ত্রুটি</div><div class="alert-body" id="rm-err-msg"></div></div>
+    <div class="alert alert-ok" id="rm-ok"><div class="alert-head">✅ সফল</div><div class="alert-body" id="rm-ok-msg"></div></div>
+  </div>
+
+  <!-- ============ PANEL: REMOVE ALL ============ -->
+  <div class="panel" id="panel-removeall">
+    <div class="card">
+      <div class="card-title"><span class="ico">🔑</span>লগইন তথ্য</div>
+      <div class="field"><label>UID</label><input type="text" id="ra-uid" placeholder="আপনার UID" inputmode="numeric"/></div>
+      <div class="field"><label>পাসওয়ার্ড</label><input type="password" id="ra-pass" placeholder="পাসওয়ার্ড"/></div>
+      <div class="field">
+        <label>সার্ভার</label>
+        <select id="ra-server">
+          <option value="BD">🇧🇩 BD</option><option value="IND">🇮🇳 IND</option>
+          <option value="SG">🇸🇬 SG</option><option value="ID">🇮🇩 ID</option><option value="ME">ME</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="ra-load-btn" onclick="loadForRemoveAll()">
+        <span class="spin" id="ra-load-spin"></span>
+        <span class="btn-lbl">📋 ফ্রেন্ড লিস্ট লোড করুন</span>
+      </button>
+    </div>
+
+    <div id="ra-list-wrap" style="display:none;">
+      <div class="card">
+        <div class="card-title"><span class="ico">👥</span>ফ্রেন্ড লিস্ট</div>
+        <div class="friend-stats">
+          <div class="fstat"><div class="fnum" id="ra-count">0</div><div class="flbl">মোট ফ্রেন্ড</div></div>
+        </div>
+        <div id="ra-items" class="rall-friend-list"></div>
+      </div>
+      <button class="btn btn-red" id="ra-rm-btn" onclick="removeAllFriends()">
+        <span class="spin" id="ra-rm-spin"></span>
+        <span class="btn-lbl">🗑 সব ফ্রেন্ড রিমুভ করুন</span>
+      </button>
+    </div>
+
+    <div class="alert alert-err" id="ra-err"><div class="alert-head">⚠️ ত্রুটি</div><div class="alert-body" id="ra-err-msg"></div></div>
+    <div class="alert alert-ok" id="ra-ok"><div class="alert-head">✅ সফল</div><div class="alert-body" id="ra-ok-msg"></div></div>
+  </div>
+
+  <!-- ============ PROFILE VIEW PAGE ============ -->
+  <div class="profile-wrap" id="profile-view">
+    <button class="back-btn" onclick="closeProfile()">← ফিরুন</button>
+
+    <!-- banner -->
+    <div class="profile-banner" id="pv-banner">
+      <div class="profile-banner-placeholder" id="pv-banner-ph">🎮</div>
+    </div>
+
+    <!-- avatar overlapping banner bottom -->
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar">
+        <img src="" id="pv-avatar-img" onerror="this.style.display='none'"/>
+      </div>
+    </div>
+
+    <!-- head card -->
+    <div class="profile-head" id="pv-head">
+      <div class="profile-name" id="pv-name">KAWSAR_CODEX</div>
+      <div class="profile-uid"><span class="uid-ico">🆔</span><span id="pv-uid">—</span></div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val" id="pv-level">—</div><div class="stat-lbl">লেভেল</div></div>
+        <div class="stat-box"><div class="stat-val" id="pv-rank">—</div><div class="stat-lbl">র‍্যাংক</div></div>
+        <div class="stat-box"><div class="stat-val" id="pv-exp">—</div><div class="stat-lbl">EXP</div></div>
+        <div class="stat-box"><div class="stat-val" id="pv-rpoints">—</div><div class="stat-lbl">র‍্যাংকিং পয়েন্টস</div></div>
+        <div class="stat-box"><div class="stat-val" id="pv-badges">—</div><div class="stat-lbl">ব্যাজ</div></div>
+        <div class="stat-box"><div class="stat-val" id="pv-likes">—</div><div class="stat-lbl">লাইক</div></div>
+      </div>
+    </div>
+
+    <!-- basic info -->
+    <div class="info-section">
+      <div class="info-sec-title"><span class="ico">ℹ️</span>বেসিক ইনফো</div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-val" id="pv-region">—</div><div class="info-lbl">রিজিয়ন</div></div>
+        <div class="info-box"><div class="info-val" id="pv-csrank">—</div><div class="info-lbl">CS র‍্যাংক</div></div>
+        <div class="info-box"><div class="info-val" id="pv-maxrank">—</div><div class="info-lbl">সর্বোচ্চ র‍্যাংক</div></div>
+        <div class="info-box"><div class="info-val" id="pv-season">—</div><div class="info-lbl">সিজন</div></div>
+      </div>
+    </div>
+
+    <!-- clothes -->
+    <div class="info-section" id="pv-clothes-sec" style="display:none;">
+      <div class="info-sec-title"><span class="ico">👕</span>ক্লোথস কালেকশন (<span id="pv-clothes-count">0</span> টি)</div>
+      <div class="clothes-grid" id="pv-clothes"></div>
+    </div>
+
+    <!-- equipped skills -->
+    <div class="info-section" id="pv-skills-sec" style="display:none;">
+      <div class="info-sec-title"><span class="ico">⚡</span>ইকুইপড স্কিলস</div>
+      <div class="skills-wrap" id="pv-skills"></div>
+    </div>
+
+    <!-- pet info -->
+    <div class="info-section" id="pv-pet-sec" style="display:none;">
+      <div class="info-sec-title"><span class="ico">🐾</span>পেট ইনফো</div>
+      <div class="pet-wrap">
+        <div class="pet-img-wrap"><img src="" id="pv-pet-img" onerror="this.style.display='none'"/></div>
+        <div class="pet-stats">
+          <div class="info-grid">
+            <div class="info-box"><div class="info-val" id="pv-pet-id">—</div><div class="info-lbl">পেট #ID</div></div>
+            <div class="info-box"><div class="info-val" id="pv-pet-level">—</div><div class="info-lbl">পেট লেভেল</div></div>
+            <div class="info-box" style="grid-column:1/-1"><div class="info-val" id="pv-pet-exp">—</div><div class="info-lbl">পেট EXP</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- social info -->
+    <div class="info-section" id="pv-social-sec">
+      <div class="info-sec-title"><span class="ico">💬</span>সোশ্যাল ইনফো</div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-val" id="pv-gender">?</div><div class="info-lbl">জেন্ডার</div></div>
+        <div class="info-box"><div class="info-val" id="pv-lang">—</div><div class="info-lbl">ল্যাংগুয়েজ</div></div>
+        <div class="info-box"><div class="info-val" id="pv-prefer">?</div><div class="info-lbl">প্রেফারেন্স</div></div>
+      </div>
+    </div>
+
+    <!-- clan info -->
+    <div class="info-section" id="pv-clan-sec" style="display:none;">
+      <div class="info-sec-title"><span class="ico">👥</span>ক্লান ইনফো</div>
+      <div class="clan-grid">
+        <div class="info-box" style="grid-column:1/3"><div class="info-val" id="pv-clan-name">—</div><div class="info-lbl">ক্লান নাম</div></div>
+        <div class="info-box"><div class="info-val" id="pv-clan-level">—</div><div class="info-lbl">ক্লান লেভেল</div></div>
+        <div class="info-box"><div class="info-val" id="pv-clan-members">—</div><div class="info-lbl">সদস্য সংখ্যা</div></div>
+      </div>
+    </div>
+
+    <!-- other -->
+    <div class="info-section">
+      <div class="info-sec-title"><span class="ico">💳</span>অন্যান্য</div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-val" id="pv-credit">—</div><div class="info-lbl">ক্রেডিট স্কোর</div></div>
+        <div class="info-box"><div class="info-val" id="pv-title">—</div><div class="info-lbl">টাইটেল</div></div>
+      </div>
+    </div>
+
+    <!-- action buttons -->
+    <div class="profile-actions">
+      <button class="btn btn-green" id="pv-add-btn" onclick="addFromProfile()">
+        <span class="spin" id="pv-add-spin"></span>
+        <span class="btn-lbl">👤+ ফ্রেন্ড এড করুন</span>
+      </button>
+      <button class="btn btn-red" id="pv-rm-btn" onclick="removeFromProfile()">
+        <span class="spin" id="pv-rm-spin"></span>
+        <span class="btn-lbl">❌ ফ্রেন্ড রিমুভ</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      <a class="footer-ico" href="https://t.me/kawsar_codex_bd" target="_blank">✈️</a>
+      <a class="footer-ico" href="https://youtube.com/@KAWSAREDITZ-OFFICIAL" target="_blank">▶️</a>
+      <div class="footer-dev">&lt;/&gt; ডেভেলপার: <span>KAWSAR_CODEX</span></div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const CDN = 'https://cdn.jsdelivr.net/gh/ShahGCreator/icon@main/PNG/';
+const imgUrl = id => `${CDN}${id}.png`;
+
+let currentFriendList = [];
+let currentProfileUid = null;
+let currentProfileData = null;
+let currentBotUid = null;
+let currentBotPass = null;
+let currentServer = null;
+let searchedPlayerData = null;
+
+// ── helpers ──────────────────────────────────────────────
+function setLoad(btnId, spinId, on) {
+  const b = document.getElementById(btnId);
+  if(!b) return;
+  b.disabled = on;
+  on ? b.classList.add('loading') : b.classList.remove('loading');
+}
+function showAlert(id, show, msg) {
+  const el = document.getElementById(id);
+  el.className = 'alert ' + (id.endsWith('-err') ? 'alert-err' : 'alert-ok') + (show ? ' show' : '');
+  if(msg) el.querySelector('.alert-body').textContent = msg;
+}
+function toast(msg, duration=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  event.target.classList.add('active');
+  closeProfile();
+}
+function fmtNum(n) { if(!n) return '—'; return Number(n).toLocaleString(); }
+
+// ── IMG helpers ──────────────────────────────────────────
+function safeImg(src, fallback='') {
+  const i = new Image();
+  i.src = src;
+  return i;
+}
+
+// ── PROFILE VIEW ─────────────────────────────────────────
+function showProfilePage(data, botUid, botPass, server) {
+  currentProfileData = data;
+  currentBotUid = botUid;
+  currentBotPass = botPass;
+  currentServer = server;
+
+  const basic = data.basicInfo || {};
+  const profile = data.profileInfo || {};
+  const pet = data.petInfo || {};
+  const social = (data.socialInfo && data.socialInfo.socialBasicInfo) || data.socialInfo || {};
+  const clan = data.clanBasicInfo || {};
+  const credit = (data.creditScoreInfo || {}).creditScore;
+
+  currentProfileUid = basic.accountId;
+
+  // banner
+  const bannerId = basic.bannerId;
+  const pvBanner = document.getElementById('pv-banner');
+  pvBanner.innerHTML = '';
+  if(bannerId) {
+    const bImg = document.createElement('img');
+    bImg.src = imgUrl(bannerId);
+    bImg.onerror = () => { pvBanner.innerHTML='<div class="profile-banner-placeholder">🎮</div>'; };
+    pvBanner.appendChild(bImg);
+  } else {
+    pvBanner.innerHTML = '<div class="profile-banner-placeholder">🎮</div>';
+  }
+
+  // avatar
+  const avatarId = basic.headPic;
+  const avImg = document.getElementById('pv-avatar-img');
+  if(avatarId) {
+    avImg.src = imgUrl(avatarId);
+    avImg.style.display = 'block';
+  } else {
+    avImg.style.display = 'none';
+  }
+
+  // basic
+  document.getElementById('pv-name').textContent = basic.nickname || 'Unknown';
+  document.getElementById('pv-uid').textContent = basic.accountId || '—';
+  document.getElementById('pv-level').textContent = basic.level || '—';
+  document.getElementById('pv-rank').textContent = basic.rank || '—';
+  document.getElementById('pv-exp').textContent = fmtNum(basic.exp);
+  document.getElementById('pv-rpoints').textContent = fmtNum(basic.rankingPoints);
+  document.getElementById('pv-badges').textContent = basic.badgeCnt || '—';
+  document.getElementById('pv-likes').textContent = fmtNum(basic.liked);
+  document.getElementById('pv-region').textContent = basic.region || '—';
+  document.getElementById('pv-csrank').textContent = basic.csRank || '—';
+  document.getElementById('pv-maxrank').textContent = basic.maxRank || '—';
+  document.getElementById('pv-season').textContent = basic.seasonId || '—';
+  document.getElementById('pv-credit').textContent = credit || '—';
+  document.getElementById('pv-title').textContent = basic.title || '—';
+
+  // social
+  const genderMap = {0:'?',1:'পুরুষ',2:'মহিলা'};
+  const langMap = {1:'EN',2:'CN',4:'Thai',5:'VN',6:'ID',7:'PT',8:'ES',9:'RU',13:'AR',14:'HI',17:'ARABIC',20:'Bengali'};
+  document.getElementById('pv-gender').textContent = genderMap[social.gender] || '?';
+  document.getElementById('pv-lang').textContent = langMap[social.language] || (social.language ? String(social.language) : '—');
+  document.getElementById('pv-prefer').textContent = social.modePrefer || '?';
+
+  // clothes
+  const clothes = profile.clothes || [];
+  const clothSec = document.getElementById('pv-clothes-sec');
+  if(clothes.length) {
+    clothSec.style.display = 'block';
+    document.getElementById('pv-clothes-count').textContent = clothes.length;
+    const cGrid = document.getElementById('pv-clothes');
+    cGrid.innerHTML = '';
+    clothes.forEach((cid, i) => {
+      const div = document.createElement('div');
+      div.className = 'cloth-item';
+      const imgSrc = imgUrl(cid);
+      div.innerHTML = `<img class="cloth-img" src="${imgSrc}"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+        <div class="cloth-fallback" style="display:none;width:52px;height:52px;align-items:center;justify-content:center;margin:0 auto 4px;font-size:22px;background:var(--bg);border-radius:6px;">👕</div>
+        <div class="cloth-num">#${i+1}<br><span style="font-size:9px;color:var(--text3);opacity:.6">${cid}</span></div>`;
+      cGrid.appendChild(div);
+    });
+  } else {
+    clothSec.style.display = 'none';
+  }
+
+  // skills
+  const skills = profile.equipedSkills || [];
+  const skillSec = document.getElementById('pv-skills-sec');
+  if(skills.length) {
+    skillSec.style.display = 'block';
+    const sw = document.getElementById('pv-skills');
+    sw.innerHTML = '';
+    skills.forEach(s => {
+      const t = document.createElement('div');
+      t.className = 'skill-tag';
+      t.innerHTML = `<span class="sico">⚡</span>${s}`;
+      sw.appendChild(t);
+    });
+  } else {
+    skillSec.style.display = 'none';
+  }
+
+  // pet
+  const petSec = document.getElementById('pv-pet-sec');
+  if(pet && pet.id) {
+    petSec.style.display = 'block';
+    document.getElementById('pv-pet-id').textContent = pet.id || '—';
+    document.getElementById('pv-pet-level').textContent = pet.level || '—';
+    document.getElementById('pv-pet-exp').textContent = fmtNum(pet.exp);
+    const pImg = document.getElementById('pv-pet-img');
+    pImg.src = imgUrl(pet.id);
+    pImg.style.display = 'block';
+    pImg.onerror = function(){ this.style.display='none'; };
+  } else {
+    petSec.style.display = 'none';
+  }
+
+  // clan
+  const clanSec = document.getElementById('pv-clan-sec');
+  if(clan && clan.clanId) {
+    clanSec.style.display = 'block';
+    document.getElementById('pv-clan-name').textContent = clan.clanName || '—';
+    document.getElementById('pv-clan-level').textContent = clan.clanLevel || '—';
+    document.getElementById('pv-clan-members').textContent = clan.memberNum || '—';
+  } else {
+    clanSec.style.display = 'none';
+  }
+
+  // show profile, hide main content
+  document.getElementById('panel-load').style.display = 'none';
+  document.getElementById('panel-add').style.display = 'none';
+  document.getElementById('panel-remove').style.display = 'none';
+  document.getElementById('panel-removeall').style.display = 'none';
+  document.querySelector('.tabs').style.display = 'none';
+  document.querySelector('header').style.display = 'none';
+  document.getElementById('profile-view').classList.add('show');
+  window.scrollTo(0,0);
+}
+
+function closeProfile() {
+  document.getElementById('profile-view').classList.remove('show');
+  document.querySelector('.tabs').style.display = 'flex';
+  document.querySelector('header').style.display = 'block';
+  // re-show current panel
+  document.querySelectorAll('.panel').forEach(p => {
+    p.style.display = '';
+  });
+  document.querySelector('.panel.active').style.display = 'block';
+}
+
+// ── LOAD FRIEND LIST ─────────────────────────────────────
+async function loadFriendList() {
+  const uid = document.getElementById('l-uid').value.trim();
+  const pass = document.getElementById('l-pass').value.trim();
+  const server = document.getElementById('l-server').value;
+  if(!uid || !pass) { showAlert('fl-err',true,'UID এবং পাসওয়ার্ড দিন'); return; }
+
+  showAlert('fl-err',false);
+  document.getElementById('fl-empty').style.display='none';
+  document.getElementById('fl-list').style.display='none';
+  setLoad('load-btn','load-spin',true);
+
+  try {
+    const r = await fetch(`/friend?uid=${uid}&pass=${pass}`);
+    const d = await r.json();
+    setLoad('load-btn','load-spin',false);
+
+    if(!d.success || !d.friends_list) {
+      showAlert('fl-err',true, d.error || 'ফ্রেন্ড লোড করা যায়নি');
+      return;
+    }
+
+    currentFriendList = d.friends_list;
+    currentBotUid = uid; currentBotPass = pass; currentServer = server;
+
+    if(!d.friends_list.length) {
+      document.getElementById('fl-empty').style.display='block';
+      return;
+    }
+
+    document.getElementById('fl-count').textContent = d.friends_count || d.friends_list.length;
+    document.getElementById('fl-uid-show').textContent = uid;
+    const container = document.getElementById('fl-items');
+    container.innerHTML = '';
+
+    d.friends_list.forEach(f => {
+      const fuid = f.user_id;
+      const fname = f.nickname || 'Unknown';
+      const div = document.createElement('div');
+      div.className = 'friend-item';
+      div.innerHTML = `
+        <div class="friend-avatar">
+          <span>👤</span>
+        </div>
+        <div class="friend-info">
+          <div class="friend-name">${fname}</div>
+          <div class="friend-uid">${fuid}</div>
+        </div>
+        <div class="friend-actions">
+          <button class="icon-btn icon-btn-eye" title="প্রোফাইল দেখুন" onclick="viewFriendProfile('${fuid}')">👁</button>
+          <button class="icon-btn icon-btn-rm" title="রিমুভ করুন" onclick="quickRemove('${fuid}','${fname}',this)">✕</button>
+        </div>`;
+      container.appendChild(div);
+    });
+
+    document.getElementById('fl-list').style.display='block';
+  } catch(e) {
+    setLoad('load-btn','load-spin',false);
+    showAlert('fl-err',true,'নেটওয়ার্ক ত্রুটি: '+e.message);
+  }
+}
+
+async function viewFriendProfile(fuid) {
+  try {
+    toast('⏳ প্রোফাইল লোড হচ্ছে...');
+    const r = await fetch(`/player_info?uid=${currentBotUid}&password=${currentBotPass}&friend_uid=${fuid}&server_name=${currentServer}`);
+    // try playerinfo endpoint
+    let d = null;
+    if(r.ok) {
+      const raw = await r.json();
+      // if it's direct player info from playerinfo API
+      d = raw;
+    }
+    if(d) showProfilePage(d, currentBotUid, currentBotPass, currentServer);
+    else toast('❌ প্রোফাইল লোড করা যায়নি');
+  } catch(e) {
+    toast('❌ ত্রুটি: '+e.message);
+  }
+}
+
+async function quickRemove(fuid, fname, btn) {
+  if(!confirm(`"${fname}" কে রিমুভ করবেন?`)) return;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  try {
+    const r = await fetch(`/remove_friend?uid=${currentBotUid}&password=${currentBotPass}&friend_uid=${fuid}&server_name=${currentServer}`);
+    const d = await r.json();
+    if(d.status === 'success') {
+      btn.closest('.friend-item').style.opacity='0.4';
+      btn.textContent='✓';
+      toast(`✅ ${fname} রিমুভ হয়েছে`);
+    } else {
+      btn.disabled=false; btn.textContent='✕';
+      toast('❌ রিমুভ ব্যর্থ হয়েছে');
+    }
+  } catch(e) {
+    btn.disabled=false; btn.textContent='✕';
+    toast('❌ ত্রুটি');
+  }
+}
+
+// ── SEARCH PLAYER ─────────────────────────────────────────
+async function searchPlayer() {
+  const uid = document.getElementById('a-uid').value.trim();
+  const pass = document.getElementById('a-pass').value.trim();
+  const fuid = document.getElementById('a-fuid').value.trim();
+  const server = document.getElementById('a-server').value;
+
+  if(!uid||!pass||!fuid){ showAlert('add-err',true,'সব তথ্য দিন'); return; }
+
+  showAlert('add-err',false); showAlert('add-ok',false);
+  document.getElementById('srb').classList.remove('show');
+  setLoad('search-btn','search-spin',true);
+
+  try {
+    const r = await fetch(`/player_info?uid=${uid}&password=${pass}&friend_uid=${fuid}&server_name=${server}`);
+    const d = await r.json();
+    setLoad('search-btn','search-spin',false);
+
+    if(!d || d.status==='failed') {
+      showAlert('add-err',true, d.message || 'প্লেয়ার পাওয়া যায়নি');
+      return;
+    }
+
+    searchedPlayerData = d;
+    currentBotUid = uid; currentBotPass = pass; currentServer = server;
+
+    // fill search result box — API now returns both basicInfo and flat fields
+    const basic = d.basicInfo || {};
+    document.getElementById('srb-name').textContent = basic.nickname || d.nickname || '—';
+    document.getElementById('srb-uid').textContent = basic.accountId || d.uid || fuid;
+    document.getElementById('srb-level').textContent = basic.level || d.level || '—';
+    document.getElementById('srb-rank').textContent = basic.rank || d.rank || '—';
+
+    // avatar — prefer basicInfo.headPic, fallback to flat head_pic
+    const avatarId = basic.headPic || d.head_pic;
+    const bannerId = basic.bannerId || d.banner_id;
+    const srbAvImg = document.getElementById('srb-avatar-img');
+    if(avatarId) { srbAvImg.src = imgUrl(avatarId); srbAvImg.style.display='block'; }
+    else { srbAvImg.style.display='none'; }
+
+    const srbBanner = document.getElementById('srb-banner');
+    if(bannerId) {
+      srbBanner.innerHTML = `<img src="${imgUrl(bannerId)}" onerror="this.parentElement.innerHTML='<div class=srb-banner-ph>🎮</div>'" style="width:100%;height:100%;object-fit:cover"/>`;
+    }
+
+    document.getElementById('srb').classList.add('show');
+  } catch(e) {
+    setLoad('search-btn','search-spin',false);
+    showAlert('add-err',true,'নেটওয়ার্ক ত্রুটি: '+e.message);
+  }
+}
+
+function viewProfileFromSearch() {
+  if(!searchedPlayerData) return;
+  // If full nested data already present, use directly
+  if(searchedPlayerData.basicInfo) {
+    showProfilePage(searchedPlayerData, currentBotUid, currentBotPass, currentServer);
+    return;
+  }
+  // build minimal profile data shape from flat snake_case
+  const d = searchedPlayerData;
+  const profileData = {
+    basicInfo: {
+      accountId: d.uid, nickname: d.nickname, level: d.level,
+      rank: d.rank, exp: d.exp, rankingPoints: d.ranking_points,
+      badgeCnt: d.badge_cnt, liked: d.likes, region: d.region,
+      csRank: d.cs_rank, maxRank: d.max_rank, seasonId: d.season_id,
+      headPic: d.head_pic, bannerId: d.banner_id, title: d.title
+    },
+    profileInfo: {},
+    petInfo: null,
+    socialInfo: {},
+    clanBasicInfo: null,
+    creditScoreInfo: {}
+  };
+  showProfilePage(profileData, currentBotUid, currentBotPass, currentServer);
+}
+
+async function addFriendNow() {
+  if(!searchedPlayerData) return;
+  const uid = currentBotUid;
+  const pass = currentBotPass;
+  const fuid = searchedPlayerData.uid || document.getElementById('a-fuid').value.trim();
+  const server = currentServer;
+
+  setLoad('add-btn','add-spin',true);
+  try {
+    const r = await fetch(`/adding_friend?uid=${uid}&password=${pass}&friend_uid=${fuid}&server_name=${server}`);
+    const d = await r.json();
+    setLoad('add-btn','add-spin',false);
+    if(d.status==='success') { showAlert('add-ok',true,`✅ ফ্রেন্ড রিকোয়েস্ট পাঠানো হয়েছে!`); }
+    else { showAlert('add-err',true, d.message||'এড করা যায়নি'); }
+  } catch(e) {
+    setLoad('add-btn','add-spin',false);
+    showAlert('add-err',true,'ত্রুটি: '+e.message);
+  }
+}
+
+// ── REMOVE FRIEND ─────────────────────────────────────────
+async function removeFriend() {
+  const uid = document.getElementById('r-uid').value.trim();
+  const pass = document.getElementById('r-pass').value.trim();
+  const fuid = document.getElementById('r-fuid').value.trim();
+  const server = document.getElementById('r-server').value;
+  if(!uid||!pass||!fuid){ showAlert('rm-err',true,'সব তথ্য দিন'); return; }
+  showAlert('rm-err',false); showAlert('rm-ok',false);
+  setLoad('rm-btn','rm-spin',true);
+  try {
+    const r = await fetch(`/remove_friend?uid=${uid}&password=${pass}&friend_uid=${fuid}&server_name=${server}`);
+    const d = await r.json();
+    setLoad('rm-btn','rm-spin',false);
+    if(d.status==='success') showAlert('rm-ok',true,'✅ ফ্রেন্ড সফলভাবে রিমুভ হয়েছে!');
+    else showAlert('rm-err',true, d.message||'রিমুভ ব্যর্থ');
+  } catch(e) {
+    setLoad('rm-btn','rm-spin',false);
+    showAlert('rm-err',true,'ত্রুটি: '+e.message);
+  }
+}
+
+// ── REMOVE ALL ────────────────────────────────────────────
+async function loadForRemoveAll() {
+  const uid = document.getElementById('ra-uid').value.trim();
+  const pass = document.getElementById('ra-pass').value.trim();
+  const server = document.getElementById('ra-server').value;
+  if(!uid||!pass){ showAlert('ra-err',true,'UID এবং পাসওয়ার্ড দিন'); return; }
+  showAlert('ra-err',false);
+  document.getElementById('ra-list-wrap').style.display='none';
+  setLoad('ra-load-btn','ra-load-spin',true);
+  try {
+    const r = await fetch(`/friend?uid=${uid}&pass=${pass}`);
+    const d = await r.json();
+    setLoad('ra-load-btn','ra-load-spin',false);
+    if(!d.success){ showAlert('ra-err',true, d.error||'লোড ব্যর্থ'); return; }
+    currentFriendList = d.friends_list || [];
+    currentBotUid=uid; currentBotPass=pass; currentServer=server;
+    document.getElementById('ra-count').textContent = currentFriendList.length;
+    const items = document.getElementById('ra-items');
+    items.innerHTML='';
+    currentFriendList.forEach((f,i)=>{
+      const div=document.createElement('div');
+      div.className='rall-item';
+      div.innerHTML=`<div class="rall-num">${i+1}</div><div class="rall-name">${f.nickname||'Unknown'}</div><div class="rall-uid">${f.user_id}</div>`;
+      items.appendChild(div);
+    });
+    document.getElementById('ra-list-wrap').style.display='block';
+  } catch(e){
+    setLoad('ra-load-btn','ra-load-spin',false);
+    showAlert('ra-err',true,'নেটওয়ার্ক ত্রুটি');
+  }
+}
+
+async function removeAllFriends() {
+  if(!currentFriendList.length){ toast('কোনো ফ্রেন্ড নেই'); return; }
+  if(!confirm(`সত্যিই ${currentFriendList.length} জন ফ্রেন্ড সব রিমুভ করবেন?`)) return;
+  showAlert('ra-err',false); showAlert('ra-ok',false);
+  setLoad('ra-rm-btn','ra-rm-spin',true);
+  let ok=0, fail=0;
+  for(const f of currentFriendList){
+    try{
+      const r=await fetch(`/remove_friend?uid=${currentBotUid}&password=${currentBotPass}&friend_uid=${f.user_id}&server_name=${currentServer}`);
+      const d=await r.json();
+      if(d.status==='success') ok++; else fail++;
+    } catch{ fail++; }
+  }
+  setLoad('ra-rm-btn','ra-rm-spin',false);
+  showAlert('ra-ok',true,`✅ সম্পন্ন! ${ok} জন রিমুভ হয়েছে${fail?' | '+fail+' টি ব্যর্থ':''}`);
+}
+
+// ── PROFILE ACTIONS ───────────────────────────────────────
+async function addFromProfile() {
+  if(!currentProfileUid||!currentBotUid) return;
+  setLoad('pv-add-btn','pv-add-spin',true);
+  try {
+    const r=await fetch(`/adding_friend?uid=${currentBotUid}&password=${currentBotPass}&friend_uid=${currentProfileUid}&server_name=${currentServer}`);
+    const d=await r.json();
+    setLoad('pv-add-btn','pv-add-spin',false);
+    toast(d.status==='success'?'✅ এড সফল হয়েছে!':'❌ এড ব্যর্থ হয়েছে');
+  } catch(e){
+    setLoad('pv-add-btn','pv-add-spin',false);
+    toast('❌ ত্রুটি');
+  }
+}
+
+async function removeFromProfile() {
+  if(!currentProfileUid||!currentBotUid) return;
+  if(!confirm('এই ফ্রেন্ড রিমুভ করবেন?')) return;
+  setLoad('pv-rm-btn','pv-rm-spin',true);
+  try {
+    const r=await fetch(`/remove_friend?uid=${currentBotUid}&password=${currentBotPass}&friend_uid=${currentProfileUid}&server_name=${currentServer}`);
+    const d=await r.json();
+    setLoad('pv-rm-btn','pv-rm-spin',false);
+    toast(d.status==='success'?'✅ রিমুভ সফল হয়েছে!':'❌ রিমুভ ব্যর্থ');
+  } catch(e){
+    setLoad('pv-rm-btn','pv-rm-spin',false);
+    toast('❌ ত্রুটি');
+  }
+}
+</script>
+</body>
+</html>
